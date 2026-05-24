@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MonQE.mg — Tu connais ton QI, mais connais-tu ton QE ?</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --dark: #0D0D0D;
+    --dark2: #1A1A1A;
+    --dark3: #242424;
+    --cream: #F5EDD6;
+    --text: #E8E0D0;
+    --muted: #888;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: block; }
+
+  /* ===== HERO ===== */
+  #screen-hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+  }
+
+  .badge {
+    display: inline-block;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    border-radius: 100px;
+    margin-bottom: 36px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(38px, 8vw, 80px);
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 12px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero-title span { color: var(--gold); }
+
+  .hero-sub {
+    font-size: clamp(14px, 3vw, 18px);
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 52px;
+    max-width: 460px;
+    line-height: 1.7;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 52px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    padding: 18px 52px;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    animation: fadeUp 0.8s 0.4s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.15);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .btn-primary:hover::after { transform: translateX(0); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,168,76,0.3); }
+
+  .disclaimer { font-size: 12px; color: var(--muted); margin-top: 20px; animation: fadeUp 0.8s 0.5s ease both; }
+
+  /* Divider line */
+  .line-divider {
+    width: 60px;
+    height: 2px;
+    background: var(--gold);
+    margin: 0 auto 36px;
+    animation: fadeUp 0.8s 0.15s ease both;
+  }
+
+  /* ===== TEST SCREEN ===== */
+  #screen-test {
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .test-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .test-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--gold);
+  }
+
+  .progress-wrap { flex: 1; margin: 0 24px; }
+  .progress-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; text-align: right; }
+  .progress-bar {
+    height: 3px;
+    background: var(--dark3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .question-num {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .question-card {
+    background: var(--dark2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 36px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .question-category {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(18px, 4vw, 24px);
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--cream);
+  }
+
+  .answers { display: flex; flex-direction: column; gap: 12px; }
+
+  .answer-btn {
+    background: var(--dark2);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    padding: 16px 20px;
+    border-radius: 8px;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .answer-btn:hover {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.08);
+    transform: translateX(4px);
+  }
+
+  .answer-btn.selected {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.12);
+    color: var(--gold-light);
+  }
+
+  .answer-letter {
+    width: 28px;
+    height: 28px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  .answer-btn.selected .answer-letter { opacity: 1; }
+
+  .btn-next {
+    width: 100%;
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.3s ease;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .btn-next.ready {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .btn-next.ready:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,168,76,0.3); }
+
+  /* ===== RESULT SCREEN ===== */
+  #screen-result {
+    min-height: 100vh;
+    padding: 60px 24px 80px;
+    max-width: 680px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .result-badge {
+    display: inline-block;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    border-radius: 100px;
+    margin-bottom: 32px;
+  }
+
+  .score-circle {
+    width: 160px;
+    height: 160px;
+    border: 3px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 32px;
+    position: relative;
+    animation: scaleIn 0.6s ease both;
+  }
+
+  .score-circle::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.1), transparent);
+  }
+
+  .score-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 56px;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .score-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 5vw, 36px);
+    margin-bottom: 16px;
+    color: var(--cream);
+  }
+
+  .result-teaser {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .result-teaser strong { color: var(--text); }
+
+  /* Blurred section */
+  .locked-section {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .locked-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(4px);
+    background: rgba(13,13,13,0.6);
+    z-index: 2;
+    border-radius: 12px;
+  }
+
+  .lock-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .lock-icon { font-size: 28px; }
+  .lock-text { font-size: 13px; color: var(--muted); }
+
+  .locked-content {
+    filter: blur(6px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .locked-content p { margin-bottom: 12px; font-size: 14px; line-height: 1.7; }
+
+  .unlock-box {
+    background: linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.04));
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  .unlock-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+
+  .unlock-price {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 16px 0 8px;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .unlock-price span { font-size: 16px; font-weight: 400; color: var(--muted); }
+
+  .unlock-features {
+    list-style: none;
+    text-align: left;
+    margin: 20px 0 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .unlock-features li {
+    font-size: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .unlock-features li::before {
+    content: '✦';
+    color: var(--gold);
+    font-size: 10px;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .mvola-box {
+    background: var(--dark3);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .mvola-title { font-size: 12px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+
+  .mvola-step {
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.6;
+  }
+
+  .mvola-num {
+    width: 22px;
+    height: 22px;
+    background: var(--gold);
+    color: var(--dark);
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .phone-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-align: center;
+    margin: 16px 0;
+    padding: 12px;
+    background: rgba(201,168,76,0.08);
+    border-radius: 6px;
+    border: 1px dashed rgba(201,168,76,0.4);
+  }
+
+  .btn-whatsapp {
+    width: 100%;
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-whatsapp:hover { background: #20BD5C; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,211,102,0.3); }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .hero-stats { gap: 24px; }
+    .question-card { padding: 24px; }
+    .test-header { flex-wrap: wrap; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== SCREEN 1 : HERO ===== -->
+<div id="screen-hero" class="screen active">
+  <div class="badge">Test Officiel QE</div>
+  <div class="line-divider"></div>
+  <h1 class="hero-title">Tu connais ton QI,<br>mais connais-tu <span>ton QE ?</span></h1>
+  <p class="hero-sub">Le Quotient Émotionnel révèle comment tu gères tes émotions, tes relations et les défis de la vie. 20 questions. 5 minutes.</p>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">20</div>
+      <div class="stat-label">Questions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">5min</div>
+      <div class="stat-label">Durée</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">5</div>
+      <div class="stat-label">Dimensions</div>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="startTest()">Découvrir mon QE →</button>
+  <p class="disclaimer">Test gratuit · Résultat immédiat · Rapport détaillé disponible</p>
+</div>
+
+<!-- ===== SCREEN 2 : TEST ===== -->
+<div id="screen-test" class="screen">
+  <div class="test-header">
+    <div class="test-logo">MonQE</div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="progress-label">1 / 20</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:5%"></div></div>
+    </div>
+    <div class="question-num" id="question-num">Question 1</div>
+  </div>
+
+  <div class="question-card" id="question-card">
+    <div class="question-category" id="question-category">Conscience de soi</div>
+    <div class="question-text" id="question-text">Chargement...</div>
+  </div>
+
+  <div class="answers" id="answers"></div>
+  <button class="btn-next" id="btn-next" onclick="nextQuestion()">Question suivante →</button>
+</div>
+
+<!-- ===== SCREEN 3 : RÉSULTAT ===== -->
+<div id="screen-result" class="screen">
+  <div class="result-badge">Ton résultat</div>
+  <div class="score-circle">
+    <div class="score-num" id="score-display">--</div>
+    <div class="score-label">sur 100</div>
+  </div>
+
+  <h2 class="result-title" id="result-title">Chargement...</h2>
+  <p class="result-teaser" id="result-teaser"></p>
+
+  <!-- Section verrouillée -->
+  <div class="locked-section">
+    <div class="lock-overlay">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-text">Rapport complet verrouillé</div>
+    </div>
+    <div class="locked-content">
+      <p>Votre score en gestion des émotions révèle une tendance à la réactivité émotionnelle dans les situations de conflit. Vous avez une capacité naturelle à ressentir les émotions des autres mais...</p>
+      <p>En matière d'empathie, votre profil indique une sensibilité aux signaux non-verbaux supérieure à la moyenne. Cependant, cette qualité peut parfois vous exposer à...</p>
+      <p>Concernant votre régulation émotionnelle, les résultats montrent que vous disposez de ressources internes pour...</p>
+    </div>
+  </div>
+
+  <!-- Débloquer -->
+  <div class="unlock-box">
+    <div class="unlock-title">Débloquer le rapport complet</div>
+    <p style="font-size:14px; color:var(--muted); line-height:1.7">Découvre ton analyse détaillée sur les 5 dimensions du QE : conscience de soi, maîtrise de soi, motivation, empathie et compétences sociales.</p>
+    <div class="unlock-price">1 500 Ar <span>paiement unique</span></div>
+
+    <ul class="unlock-features">
+      <li>Analyse complète de tes 5 dimensions émotionnelles</li>
+      <li>Tes points forts et axes d'amélioration personnalisés</li>
+      <li>Conseils pratiques adaptés à ton profil</li>
+      <li>Comparaison avec la moyenne des participants</li>
+      <li>PDF téléchargeable à garder</li>
+    </ul>
+
+    <div class="mvola-box">
+      <div class="mvola-title">Comment payer via Mvola</div>
+      <div class="mvola-step"><div class="mvola-num">1</div>Envoie <strong>1 500 Ar</strong> sur Mvola au numéro :</div>
+      <div class="phone-num">034 76 221 27</div>
+      <div class="mvola-step"><div class="mvola-num">2</div>Prends une capture d'écran de la confirmation</div>
+      <div class="mvola-step"><div class="mvola-num">3</div>Envoie la capture sur WhatsApp au même numéro — tu reçois ton rapport en quelques minutes</div>
+    </div>
+
+    <a href="https://wa.me/261347622127?text=Bonjour%2C%20j'ai%20fait%20le%20test%20QE%20sur%20MonQE.mg%20et%20je%20voudrais%20mon%20rapport%20complet.%20Voici%20ma%20capture%20Mvola%20%3A" target="_blank">
+      <button class="btn-whatsapp">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.528 5.855L.057 23.882a.5.5 0 0 0 .611.64l6.218-1.634A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.028-1.381l-.36-.214-3.732.98.998-3.645-.235-.374A9.818 9.818 0 1 1 12 21.818z"/></svg>
+        Envoyer ma capture WhatsApp
+      </button>
+    </a>
+  </div>
+
+  <p style="font-size:13px; color:var(--muted); margin-top:16px">Rapport envoyé sous 15 minutes · Disponible 7j/7</p>
+</div>
+
+<script>
+const questions = [
+  { cat: "Conscience de soi", text: "Quand tu es stressé(e), tu remarques tes propres émotions...", answers: ["Immédiatement, je suis très conscient(e)", "Après un moment de réflexion", "Rarement, je m'en rends compte après", "Je ne fais pas vraiment attention"], scores: [4,3,2,1] },
+  { cat: "Conscience de soi", text: "Tu peux expliquer avec précision pourquoi tu ressens une émotion :", answers: ["Toujours, j'analyse mes émotions", "Souvent", "Parfois seulement", "Je trouve ça difficile"], scores: [4,3,2,1] },
+  { cat: "Maîtrise de soi", text: "Quand quelqu'un te met en colère, tu...", answers: ["Prends une pause avant de répondre", "Réfléchis puis réponds calmement", "Réponds parfois trop vite", "Réagis immédiatement sans filtre"], scores: [4,3,2,1] },
+  { cat: "Maîtrise de soi", text: "Face à une situation très frustrante, tu...", answers: ["Gardes ton calme et cherches une solution", "Exprimes ta frustration de façon contrôlée", "As du mal à rester calme", "Perds facilement patience"], scores: [4,3,2,1] },
+  { cat: "Maîtrise de soi", text: "Tu dois accomplir une tâche ennuyeuse mais importante. Tu...", answers: ["Te mets au travail sans hésiter", "Te motives en pensant au résultat", "Procrastines mais finis par le faire", "Évites souvent ce genre de tâche"], scores: [4,3,2,1] },
+  { cat: "Motivation", text: "Quand tu échoues dans quelque chose d'important, tu...", answers: ["Analyses l'échec et recommences plus fort", "Prends le temps de te relever puis tu réessaies", "As du mal à te remotiver", "Abandonnes souvent après un échec"], scores: [4,3,2,1] },
+  { cat: "Motivation", text: "Comment décris-tu ton rapport aux objectifs ?", answers: ["Je fixe des objectifs clairs et je les atteins", "J'ai des objectifs mais je manque parfois de constance", "J'ai du mal à maintenir ma motivation", "Je vis plutôt au jour le jour"], scores: [4,3,2,1] },
+  { cat: "Motivation", text: "Quand les choses deviennent difficiles, tu...", answers: ["Vois les obstacles comme des défis à surmonter", "Continues malgré la difficulté", "Doutes parfois de toi", "As tendance à abandonner"], scores: [4,3,2,1] },
+  { cat: "Empathie", text: "Quand un ami traverse une période difficile, tu...", answers: ["Ressens vraiment ce qu'il ressent", "Comprends sa situation et lui offres ton soutien", "Écoutes mais gardes une certaine distance", "As du mal à t'impliquer émotionnellement"], scores: [4,3,2,1] },
+  { cat: "Empathie", text: "Tu arrives à lire les émotions des autres à travers leur langage corporel :", answers: ["Très facilement, c'est naturel pour moi", "Assez bien en général", "Parfois, mais je me trompe souvent", "Rarement, je ne fais pas attention"], scores: [4,3,2,1] },
+  { cat: "Empathie", text: "Face à quelqu'un qui pleure devant toi, tu...", answers: ["Ressens immédiatement le besoin de l'aider", "L'écoutes attentivement", "Ne sais pas trop comment réagir", "Te sens mal à l'aise"], scores: [4,3,2,1] },
+  { cat: "Compétences sociales", text: "Dans un groupe, tu es plutôt :", answers: ["Celui/celle qui fédère et motive les autres", "Un membre actif et à l'écoute", "Discret(e) mais présent(e)", "En retrait, tu préfères observer"], scores: [4,3,2,1] },
+  { cat: "Compétences sociales", text: "Quand il y a un conflit entre des personnes autour de toi, tu...", answers: ["Interviens pour trouver un terrain d'entente", "Aides les parties à se comprendre", "Observes sans t'impliquer", "Évites la situation"], scores: [4,3,2,1] },
+  { cat: "Compétences sociales", text: "Tu dois donner un feedback négatif à quelqu'un. Tu...", answers: ["Le fais avec tact et bienveillance", "Essaies d'être honnête et constructif", "Hésites beaucoup avant de parler", "Évites souvent ce genre de conversation"], scores: [4,3,2,1] },
+  { cat: "Conscience de soi", text: "Tu connais clairement tes propres forces et faiblesses :", answers: ["Oui, j'ai une image très précise de moi-même", "Assez bien", "Je découvre encore des choses sur moi", "Pas vraiment, je me connais peu"], scores: [4,3,2,1] },
+  { cat: "Maîtrise de soi", text: "Quand tu es débordé(e), tu...", answers: ["Priorises et gardes la tête froide", "Gères en essayant de rester organisé(e)", "Te sens stressé(e) mais continues", "Perds le contrôle de la situation"], scores: [4,3,2,1] },
+  { cat: "Empathie", text: "Est-ce que tu adaptes naturellement ton comportement selon l'humeur des gens autour de toi ?", answers: ["Oui, c'est automatique", "Souvent, j'en suis conscient(e)", "Parfois", "Rarement, je reste toujours le/la même"], scores: [4,3,2,1] },
+  { cat: "Motivation", text: "Comment réagis-tu face à la critique ?", answers: ["Je la prends comme une opportunité d'apprendre", "J'écoute et j'essaie de m'améliorer", "Je la prends un peu personnellement", "Je la vis très mal en général"], scores: [4,3,2,1] },
+  { cat: "Compétences sociales", text: "Tu rencontres quelqu'un pour la première fois. Tu...", answers: ["Mets facilement l'autre à l'aise", "Engages la conversation naturellement", "Attends que l'autre prenne l'initiative", "Te sens souvent gêné(e)"], scores: [4,3,2,1] },
+  { cat: "Conscience de soi", text: "Est-ce que tes valeurs guident vraiment tes décisions au quotidien ?", answers: ["Oui, je suis très aligné(e) avec mes valeurs", "La plupart du temps", "Parfois je m'en éloigne", "J'ai du mal à identifier mes vraies valeurs"], scores: [4,3,2,1] }
+];
+
+let current = 0;
+let totalScore = 0;
+let selectedAnswer = null;
+
+function startTest() {
+  showScreen('screen-test');
+  renderQuestion();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const pct = ((current + 1) / questions.length * 100).toFixed(0);
+
+  document.getElementById('progress-label').textContent = `${current + 1} / ${questions.length}`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('question-num').textContent = `Question ${current + 1}`;
+  document.getElementById('question-category').textContent = q.cat;
+  document.getElementById('question-text').textContent = q.text;
+
+  const answersEl = document.getElementById('answers');
+  answersEl.innerHTML = '';
+  selectedAnswer = null;
+  document.getElementById('btn-next').classList.remove('ready');
+
+  const letters = ['A','B','C','D'];
+  q.answers.forEach((ans, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `<span class="answer-letter">${letters[i]}</span>${ans}`;
+    btn.onclick = () => selectAnswer(i, btn);
+    answersEl.appendChild(btn);
+  });
+
+  // animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'fadeUp 0.4s ease both';
+}
+
+function selectAnswer(index, btn) {
+  document.querySelectorAll('.answer-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedAnswer = index;
+  document.getElementById('btn-next').classList.add('ready');
+}
+
+function nextQuestion() {
+  if (selectedAnswer === null) return;
+  totalScore += questions[current].scores[selectedAnswer];
+  current++;
+
+  if (current >= questions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  const maxScore = questions.length * 4;
+  const pct = Math.round((totalScore / maxScore) * 100);
+
+  showScreen('screen-result');
+
+  // animate score
+  let displayed = 0;
+  const el = document.getElementById('score-display');
+  const interval = setInterval(() => {
+    displayed += 2;
+    if (displayed >= pct) { displayed = pct; clearInterval(interval); }
+    el.textContent = displayed;
+  }, 20);
+
+  let title, teaser;
+
+  if (pct >= 80) {
+    title = "Intelligence émotionnelle exceptionnelle";
+    teaser = `Avec un score de <strong>${pct}/100</strong>, tu fais partie des rares personnes dotées d'une intelligence émotionnelle très développée. Tu comprends et gères tes émotions avec une grande maîtrise. <strong>Mais certains angles morts restent cachés...</strong>`;
+  } else if (pct >= 60) {
+    title = "Intelligence émotionnelle solide";
+    teaser = `Ton score de <strong>${pct}/100</strong> révèle une bonne conscience émotionnelle. Tu gères bien la plupart des situations mais certaines dimensions émotionnelles méritent encore d'être développées. <strong>Découvre lesquelles dans ton rapport complet.</strong>`;
+  } else if (pct >= 40) {
+    title = "Intelligence émotionnelle en développement";
+    teaser = `Ton score de <strong>${pct}/100</strong> montre que tu as des bases intéressantes mais que plusieurs dimensions de ton QE peuvent être améliorées. <strong>Ton rapport complet te révèle exactement sur quoi travailler.</strong>`;
+  } else {
+    title = "Intelligence émotionnelle à explorer";
+    teaser = `Ton score de <strong>${pct}/100</strong> indique que tu gagnerais beaucoup à développer ton intelligence émotionnelle. La bonne nouvelle ? C'est une compétence qui s'apprend. <strong>Ton rapport complet est le premier pas.</strong>`;
+  }
+
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-teaser').innerHTML = teaser;
+}
+</script>
+</body>
+</html>
